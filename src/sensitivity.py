@@ -1,8 +1,8 @@
 from __future__ import annotations
 import numpy as np
 import pandas as pd
-from config import DCFConfig
-from model import dcf_one, present_value, terminal_value
+from src.config import DCFConfig
+from src.model import dcf_one, present_value, terminal_value
 
 def dcf_price_with_overrides(base_result: dict, cfg: DCFConfig, wacc: float, terminal_growth: float) -> float:
     """
@@ -33,17 +33,17 @@ def sensitivity_grid(symbol: str, cfg: DCFConfig, growth_multiplier: float = 1.0
     # Best compromise for now: refactor later; for v2, we compute sensitivity by rerunning with patched discounting
     # by extracting wacc and terminal_growth impacts via a wrapper (below).
 
-    from model import dcf_one as _dcf_one  # local import to avoid circular
-    from model import build_growth_path
+    from src.model import dcf_one as _dcf_one  # local import to avoid circular
+    from src.model import build_growth_path
     import yfinance as yf
-    from financials import (
+    from src.financials import (
         safe_history_close,
         best_effort_cash, best_effort_total_debt,
         best_effort_revenue_series, best_effort_ebit_series, best_effort_da_series,
         best_effort_interest_expense, best_effort_tax_and_pretax,
         best_effort_working_capital_ratio, best_effort_capex_ratio
     )
-    from market import get_market_premium, fetch_risk_free_rate, cost_of_equity, clamp, calculate_wacc
+    from src.market import get_market_premium, fetch_risk_free_rate, cost_of_equity, clamp, calculate_wacc
 
     # ---- compute operating projections ONCE ----
     t = yf.Ticker(symbol)

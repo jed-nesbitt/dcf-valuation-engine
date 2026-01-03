@@ -1,12 +1,22 @@
 from __future__ import annotations
+
+import datetime as dt
+from pathlib import Path
+
 import pandas as pd
 
-from config import DCFConfig
-from model import dcf_one
-from sensitivity import sensitivity_grid
-from io_utils import read_tickers, to_powerbi_long
+from src.config import DCFConfig
+from src.model import dcf_one
+from src.sensitivity import sensitivity_grid
+from src.io_utils import read_tickers, to_powerbi_long
 
 TICKER_FILE = "input/tickers.csv"
+
+
+def _run_timestamp() -> str:
+    # microseconds included so back-to-back runs never collide
+    return dt.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+
 
 def run() -> None:
     cfg = DCFConfig(region="AU")
@@ -14,6 +24,10 @@ def run() -> None:
     tickers_df = read_tickers(TICKER_FILE)
     if "Ticker" not in tickers_df.columns:
         raise ValueError("Input file must contain a 'Ticker' column")
+
+    # ✅ Timestamped output folder (prevents overwrite)
+    out_dir = Path("output") / f"{_run_timestamp()}"
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     scenario_rows = []
     base_detail_rows = []
@@ -56,23 +70,24 @@ def run() -> None:
     scenarios_df = pd.DataFrame(scenario_rows)
     base_details_df = pd.DataFrame(base_detail_rows)
 
-    scenarios_df.to_csv("output/dcf_results_scenarios_wide.csv", index=False)
+    scenarios_df.to_csv(out_dir / "dcf_results_scenarios_wide.csv", index=False)
 
     # Power BI-friendly long format
     scenarios_long = to_powerbi_long(scenarios_df)
-    scenarios_long.to_csv("output/dcf_results_scenarios_long.csv", index=False)
+    scenarios_long.to_csv(out_dir / "dcf_results_scenarios_long.csv", index=False)
 
-    base_details_df.to_csv("output/dcf_results_base_details.csv", index=False)
+    base_details_df.to_csv(out_dir / "dcf_results_base_details.csv", index=False)
 
     if sens_rows:
         sensitivity_all = pd.concat(sens_rows, ignore_index=True)
-        sensitivity_all.to_csv("output/dcf_results_sensitivity_long.csv", index=False)
+        sensitivity_all.to_csv(out_dir / "dcf_results_sensitivity_long.csv", index=False)
 
-    print("Saved:")
+    print(f"\nSaved to: {out_dir.resolve()}")
     print("- dcf_results_scenarios_wide.csv")
     print("- dcf_results_scenarios_long.csv  (Power BI)")
     print("- dcf_results_base_details.csv")
     print("- dcf_results_sensitivity_long.csv (Power BI)")
+
 
 if __name__ == "__main__":
     run()

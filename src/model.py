@@ -2,12 +2,12 @@ from __future__ import annotations
 import numpy as np
 import yfinance as yf
 
-from config import DCFConfig
-from market import (
+from src.config import DCFConfig
+from src.market import (
     get_market_premium, fetch_risk_free_rate,
     cost_of_equity, clamp, calculate_wacc
 )
-from financials import (
+from src.financials import (
     safe_history_close,
     best_effort_cash, best_effort_total_debt,
     best_effort_revenue_series, best_effort_ebit_series, best_effort_da_series,
